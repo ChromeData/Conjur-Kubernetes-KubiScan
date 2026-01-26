@@ -1,0 +1,8 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: pam-lab08
+nodes:
+  - role: control-plane
+  - role: worker
+# Single worker is enough for the secrets + RBAC audit. Add nodes only if you want
+# to test authn-k8s across node boundaries.
