@@ -1,0 +1,18 @@
+RBAC lint run: 2026-08-12 00:38:11
+Command: python scripts/rbac_lint.py k8s/risky-rbac.yaml
+============================================================
+  [escalate      ] ClusterRole/lab-escalate: can grant itself arbitrary permissions (escalate)
+  [bind          ] ClusterRole/lab-bind: can bind any role to itself, including cluster-admin (bind)
+  [secrets-read  ] ClusterRole/lab-secret-reader: can read secrets cluster-wide
+  [pods-create   ] Role/lab-pod-creator: can create pods (schedule a pod with a privileged token)
+  [escalate      ] ClusterRole/lab-wildcard: can grant itself arbitrary permissions (escalate)
+  [bind          ] ClusterRole/lab-wildcard: can bind any role to itself, including cluster-admin (bind)
+  [impersonate   ] ClusterRole/lab-wildcard: can act as any user/group/SA (impersonate)
+  [secrets-read  ] ClusterRole/lab-wildcard: can read secrets cluster-wide
+  [pods-create   ] ClusterRole/lab-wildcard: can create pods (schedule a pod with a privileged token)
+  [wildcard-all  ] ClusterRole/lab-wildcard: wildcard verb on wildcard resource (cluster-admin-equivalent)
+  [token-create  ] ClusterRole/lab-wildcard: can mint service-account tokens
+
+11 risky RBAC rule(s) found.
+Confirm each against KubiScan's live-cluster output — they should agree.
+

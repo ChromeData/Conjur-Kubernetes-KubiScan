@@ -67,4 +67,44 @@ convenience RoleBinding there, CI catches it.
 
 ## Log
 
-_(first entry goes here on the first cluster run)_
+### 2026-08-12 — linter run against the planted fixture
+
+Ran the offline linter against `k8s/risky-rbac.yaml` before touching a cluster:
+
+```
+  [escalate      ] ClusterRole/lab-escalate: can grant itself arbitrary permissions
+  [bind          ] ClusterRole/lab-bind: can bind any role to itself, including cluster-admin
+  [secrets-read  ] ClusterRole/lab-secret-reader: can read secrets cluster-wide
+  [pods-create   ] Role/lab-pod-creator: can create pods
+  [wildcard-all  ] ClusterRole/lab-wildcard: wildcard verb on wildcard resource
+  ...
+11 risky RBAC rule(s) found.
+```
+
+All six planted primitives caught, and the clean workload trips none. Full output in
+`findings/rbac-lint-run.txt`.
+
+11 rules from 6 objects because several trip more than one check: the wildcard role
+matches `secrets-read`, `pods-create`, and `wildcard-all` at once. That's correct
+behaviour (a `*` grant genuinely is all of those) but it means the count is rules
+matched, not objects at risk. Worth remembering before quoting the number.
+
+---
+
+### 2026-08-12 — kubeconform failed CI on the kind config
+
+**Expected:** manifests validate.
+
+**Got:**
+
+```
+k8s/kind-config.yaml - failed validation: could not find schema for Cluster
+Summary: 9 resources found in 3 files - Valid: 8, Invalid: 0, Errors: 1
+```
+
+**Cause:** `kind-config.yaml` is a kind CLI config (`kind.x-k8s.io`), not a Kubernetes
+API object, so there is no upstream schema for it. Note `Invalid: 0` — nothing was
+actually wrong with any real manifest.
+
+**Fix:** `-skip Cluster`. Chose that over dropping `-strict`, which would have stopped
+catching unknown fields in the manifests that *do* matter.

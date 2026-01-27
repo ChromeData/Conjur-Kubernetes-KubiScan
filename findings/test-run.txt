@@ -1,0 +1,25 @@
+Test run: 2026-08-12 00:37:53
+Host: Windows 11, Python Python 3.14.0
+Command: python -m pytest tests/ -v
+============================================================
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.2, pluggy-1.6.0 -- C:\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\SnatchedYourChain\Downloads\pam-cloud-labs-extracted\pam-cloud-labs\08-conjur-kubernetes-kubiscan
+plugins: anyio-4.12.1, langsmith-0.7.10
+collecting ... collected 11 items
+
+tests/test_rbac_lint.py::TestSingleRule::test_escalate_flagged PASSED    [  9%]
+tests/test_rbac_lint.py::TestSingleRule::test_bind_flagged PASSED        [ 18%]
+tests/test_rbac_lint.py::TestSingleRule::test_secret_read_flagged PASSED [ 27%]
+tests/test_rbac_lint.py::TestSingleRule::test_pod_create_flagged PASSED  [ 36%]
+tests/test_rbac_lint.py::TestSingleRule::test_wildcard_flagged PASSED    [ 45%]
+tests/test_rbac_lint.py::TestSingleRule::test_benign_rule_is_clean PASSED [ 54%]
+tests/test_rbac_lint.py::TestSingleRule::test_listing_pods_is_not_creating_them PASSED [ 63%]
+tests/test_rbac_lint.py::TestDoc::test_non_rbac_doc_ignored PASSED       [ 72%]
+tests/test_rbac_lint.py::TestDoc::test_wildcard_verb_covers_specific_checks PASSED [ 81%]
+tests/test_rbac_lint.py::TestFixtures::test_risky_fixture_trips_all_planted_risks PASSED [ 90%]
+tests/test_rbac_lint.py::TestFixtures::test_clean_workload_has_no_risky_rbac PASSED [100%]
+
+============================= 11 passed in 0.03s ==============================
+
