@@ -1,78 +1,56 @@
-# Lab 08 — Conjur Secrets on Kubernetes + KubiScan RBAC Audit
+# Lab 08: Conjur Secrets on Kubernetes plus KubiScan RBAC Audit
 
 [![tests](https://github.com/ChromeData/Conjur-Kubernetes-KubiScan/actions/workflows/tests.yml/badge.svg)](https://github.com/ChromeData/Conjur-Kubernetes-KubiScan/actions/workflows/tests.yml)
 
-**Pods get their secrets from Conjur so none holds a static credential — then a
-second check hunts the RBAC permissions that make perfect secrets management
-pointless. Both halves of the same problem, because doing one without the other
-is theatre.**
+**Pods get their secrets from Conjur so none holds a static credential. Then a second check hunts the RBAC permissions that make perfect secrets management pointless. Both halves, because doing one without the other is theatre.**
 
 | | |
 |---|---|
-| **Domains** | CyberArk/Idira · Linux · Kubernetes |
-| **Built on** | [cyberark/conjur](https://github.com/cyberark/conjur) + [conjur-oss-helm-chart](https://github.com/cyberark/conjur-oss-helm-chart) · [cyberark/KubiScan](https://github.com/cyberark/KubiScan) (GPL-3.0) |
-| **Cost** | $0 (local kind/minikube) · **Runtime** ~4 hours |
-| **Status** | 🟡 Built, tests pass, not yet run on a cluster |
+| **Domains** | CyberArk/Idira, Linux, Kubernetes |
+| **Built on** | [cyberark/conjur](https://github.com/cyberark/conjur) + [helm chart](https://github.com/cyberark/conjur-oss-helm-chart), [cyberark/KubiScan](https://github.com/cyberark/KubiScan) |
+| **Cost** | $0 (local kind/minikube). **Runtime** ~4 hours |
+| **Status** | Built, tests pass, not yet run on a cluster |
 
----
+## Situation
 
-## The point
+You can do secrets perfectly, with Conjur brokering every credential and nothing static in a pod, and still be wide open. A service account that can escalate, bind, or create pods can mint itself a token that reads everything. Secrets injection and RBAC are two halves of one problem.
 
-You can do secrets *perfectly* — Conjur brokers every credential, nothing static
-in a pod — and still be wide open, because a service account with `escalate`,
-`bind`, or `create pods` can mint itself a token that reads everything. Secrets
-injection and RBAC are two halves of one problem. This lab does both.
+## Task
 
-## The two checks
+Do both halves: the clean secrets path, and the audit that checks whether the cluster's permissions quietly undo it.
 
-**KubiScan** (CyberArk's tool) runs against the live cluster and finds risky
-subjects, roles, and pods from the *effective* permissions.
+## Action
 
-**[`scripts/rbac_lint.py`](./scripts/rbac_lint.py)** is my offline pre-check — it
-parses the RBAC YAML and flags the same escalation primitives *before* anything
-is applied, so they're caught at PR time instead of after `kubectl apply`. The
-two are complementary: static analysis on the YAML in CI, plus the authoritative
-live scan. **Agreement between them is the lab's cross-check.**
+KubiScan (CyberArk's tool) runs against the live cluster and finds risky subjects, roles, and pods from the real permissions. I also wrote an offline pre check ([scripts/rbac_lint.py](./scripts/rbac_lint.py)) that reads the RBAC YAML and flags the same escalation tricks before anything is applied, so they are caught at PR time.
 
-## The planted risks
-
-[`k8s/risky-rbac.yaml`](./k8s/risky-rbac.yaml) embeds six escalation primitives,
-each of which defeats good secrets hygiene:
+To have something to catch, [k8s/risky-rbac.yaml](./k8s/risky-rbac.yaml) plants six escalation tricks, each of which beats good secrets hygiene:
 
 | Risk | Why it beats secrets injection |
 |---|---|
-| `escalate` | grant yourself any permission |
-| `bind` | bind cluster-admin to yourself |
-| secrets `get/list` | just read all the secrets directly |
-| pods `create` | schedule a pod wearing a privileged token |
-| `*/*/*` wildcard | cluster-admin by another name |
-| SA → wildcard binding | makes the wildcard live |
+| escalate | grant yourself any permission |
+| bind | bind full admin to yourself |
+| secrets read | just read all the secrets directly |
+| pods create | schedule a pod wearing a privileged token |
+| wildcard everything | full admin by another name |
+| SA to wildcard binding | makes the wildcard live |
 
-The linter catches all of them — **11 offline tests** prove it, including that the
-clean workload trips *none* and that benign rules (list configmaps, get pods)
-aren't false-flagged. CI also schema-validates every manifest with kubeconform.
+## Result
 
-```bash
-python -m pytest tests/ -v
-python scripts/rbac_lint.py k8s/risky-rbac.yaml
-```
+The linter catches all six. 11 offline tests prove it, including that the clean workload trips none and that harmless rules (list configmaps, get pods) are not false flagged. CI also schema checks every manifest with kubeconform. The two checks agreeing is the cross check: static analysis on the YAML, plus the live scan.
 
-## What I didn't build
+## What I did not build
 
-Conjur and KubiScan are CyberArk's. The secrets-injection workload, the planted
-risky-RBAC fixture, the offline RBAC linter, and the tests are mine.
+Conjur and KubiScan are CyberArk's. The workload, the planted RBAC fixture, the offline linter, and the tests are mine.
 
----
-
-## Running it
+## Run it
 
 ```bash
-make cluster        # kind cluster
-make conjur         # Conjur via Helm + authn-k8s
-make deploy         # secret-consumer workload (no static credential)
-make apply-rbac     # plant the risky RBAC
-make kubiscan       # live-cluster audit
-python scripts/rbac_lint.py k8s/*.yaml   # offline cross-check
+make cluster
+make conjur
+make deploy
+make apply-rbac
+make kubiscan
+python scripts/rbac_lint.py k8s/*.yaml   # offline cross check
 make destroy
 ```
 
@@ -80,11 +58,8 @@ Needs kind or minikube, kubectl, Helm, Python 3.
 
 ## Findings
 
-`findings/` fills in from the KubiScan run. [LAB-NOTES.md](./LAB-NOTES.md) is the
-log — the interesting question is which risky findings come from the Conjur
-install itself.
+`findings/` fills in from the KubiScan run. [LAB-NOTES.md](./LAB-NOTES.md) is the log.
 
 ## License
 
-Lab code: MIT ([LICENSE](./LICENSE)). Conjur (LGPL) and KubiScan (GPL-3.0) keep
-their licenses, credited above and not vendored.
+Lab code: MIT ([LICENSE](./LICENSE)). Conjur and KubiScan keep their licenses, credited above.
