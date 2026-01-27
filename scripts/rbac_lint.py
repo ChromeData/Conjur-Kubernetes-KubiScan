@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Flag dangerous Kubernetes RBAC from manifests, before the cluster exists.
 
-KubiScan is the authoritative check — it runs against a live cluster and sees
+KubiScan is the authoritative check, it runs against a live cluster and sees
 the effective permissions. This is the fast pre-check: parse Role / ClusterRole
 YAML and flag the verb+resource combinations that grant escalation, so you catch
 them at PR time instead of after `kubectl apply`.
@@ -90,7 +90,7 @@ def main():
     print()
     if total:
         print(f"{len(total)} risky RBAC rule(s) found.")
-        print("Confirm each against KubiScan's live-cluster output — they should agree.")
+        print("Confirm each against KubiScan's live-cluster output, they should agree.")
         sys.exit(1)
     print("No risky RBAC found.")
 

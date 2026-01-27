@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Configure Conjur's Kubernetes authenticator and load the host identity for the
-# demo workload. This is the fiddly part of the lab — see LAB-NOTES for the cert
+# demo workload. This is the fiddly part of the lab, see LAB-NOTES for the cert
 # gotchas. Conjur + the authenticator are upstream CyberArk; this wires them up.
 
 set -euo pipefail
@@ -42,7 +42,7 @@ POLICY
 
 echo "==> Loading authenticator + identity policy"
 kubectl exec -n "${NS_CONJUR}" "${POD}" -- conjurctl policy load "${ACCOUNT}" /tmp/authn.yml || {
-  echo "Policy load failed — most often a leftover host from a prior run. See LAB-NOTES."
+  echo "Policy load failed, most often a leftover host from a prior run. See LAB-NOTES."
   exit 1
 }
 
@@ -52,6 +52,5 @@ cat <<EOF
   Next: 'make demo' to deploy the workload, then check it authenticates.
 
   If the pod gets a 401 from Conjur, it is almost always the CA cert or the
-  namespace/service-account annotations not matching. That debugging IS the lab —
-  write down the exact mismatch and fix in LAB-NOTES.
+  namespace/service-account annotations not matching. That debugging IS the lab, write down the exact mismatch and fix in LAB-NOTES.
 EOF

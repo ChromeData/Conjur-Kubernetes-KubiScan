@@ -1,4 +1,4 @@
-# Lab Notes — 08 Conjur on Kubernetes + KubiScan
+# Lab Notes, 08 Conjur on Kubernetes + KubiScan
 
 Running log. Errors, dead ends, fixes, surprises. Dated, newest at the bottom.
 
@@ -7,7 +7,7 @@ Running log. Errors, dead ends, fixes, surprises. Dated, newest at the bottom.
 ## Format
 
 ```
-### YYYY-MM-DD — what I was trying to do
+### YYYY-MM-DD, what I was trying to do
 
 **Expected:**
 **Got:**
@@ -24,7 +24,7 @@ Running log. Errors, dead ends, fixes, surprises. Dated, newest at the bottom.
 KubiScan needs a running cluster. That makes it the authoritative check but a
 slow one, and useless at PR time. `rbac_lint.py` parses the YAML and flags the
 same escalation verbs offline, so a risky role is caught before it's applied.
-The two should agree — where they disagree is interesting: the linter sees the
+The two should agree. Where they disagree is interesting: the linter sees the
 declared rule, KubiScan sees the effective permission after aggregation and
 bindings.
 
@@ -36,7 +36,7 @@ slip through because it doesn't literally list `get`. The `_has` helper treats
 
 ### The clean workload must stay clean
 
-`demo-workload.yaml` defines only a ServiceAccount and Deployment — no Roles. A
+`demo-workload.yaml` defines only a ServiceAccount and Deployment, no Roles. A
 test asserts the linter finds zero risks in it, so if someone later adds a
 convenience RoleBinding there, CI catches it.
 
@@ -46,7 +46,7 @@ convenience RoleBinding there, CI catches it.
 
 - **KubiScan flags the Conjur install itself.** The Helm chart creates roles
   that KubiScan may (correctly) call risky. Triage those separately from the
-  planted fixture — don't count them as false positives without checking.
+  planted fixture. Don't count them as false positives without checking.
 - **authn-k8s wiring is the hard part.** The demo workload's secret injection
   needs the cyberark secrets-provider init container configured against the
   cluster's authn-k8s service ID. The manifest has a placeholder; wire it per
@@ -67,7 +67,7 @@ convenience RoleBinding there, CI catches it.
 
 ## Log
 
-### 2026-08-12 — linter run against the planted fixture
+### 2026-08-12, linter run against the planted fixture
 
 Ran the offline linter against `k8s/risky-rbac.yaml` before touching a cluster:
 
@@ -91,7 +91,7 @@ matched, not objects at risk. Worth remembering before quoting the number.
 
 ---
 
-### 2026-08-12 — kubeconform failed CI on the kind config
+### 2026-08-12, kubeconform failed CI on the kind config
 
 **Expected:** manifests validate.
 
@@ -103,7 +103,7 @@ Summary: 9 resources found in 3 files - Valid: 8, Invalid: 0, Errors: 1
 ```
 
 **Cause:** `kind-config.yaml` is a kind CLI config (`kind.x-k8s.io`), not a Kubernetes
-API object, so there is no upstream schema for it. Note `Invalid: 0` — nothing was
+API object, so there is no upstream schema for it. Note `Invalid: 0`, nothing was
 actually wrong with any real manifest.
 
 **Fix:** `-skip Cluster`. Chose that over dropping `-strict`, which would have stopped
