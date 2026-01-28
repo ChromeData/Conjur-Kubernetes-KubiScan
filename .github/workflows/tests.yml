@@ -18,6 +18,14 @@ jobs:
       - run: pip install pytest pyyaml
       - run: python -m pytest tests/ -v
 
+      - name: canary, the linter must find the roles this repo plants on purpose
+        # Unit tests all feed analyze_text hand-written single-document
+        # manifests, which is not the shape the linter meets in use. Against a
+        # live cluster it once reported "No risky RBAC found" with four
+        # cluster-admin-equivalent roles present, because kubectl -o json wraps
+        # everything in kind: List. See scripts/canary.sh for the full reasoning.
+        run: bash scripts/canary.sh
+
   kubeconform:
     name: Manifest schema validation
     runs-on: ubuntu-latest
