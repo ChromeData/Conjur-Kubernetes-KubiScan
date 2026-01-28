@@ -32,9 +32,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: install kubeconform
+        env:
+          KUBECONFORM_VERSION: "0.6.7"
+        # --fail and --retry, both load-bearing.
+        #
+        # Without --fail, curl writes whatever it got (a 404 page, a proxy
+        # error, a truncated body) to the file and exits 0. tar then dies with
+        # "Error is not recoverable", which says nothing about the actual
+        # problem. That is precisely how this job failed, and it is the same
+        # trap already fixed in lab 07's installer.
+        #
+        # --retry covers the transient case, which is the likelier cause here:
+        # the pinned tag and asset name both still exist upstream.
         run: |
-          curl -sSLo kc.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
+          set -euo pipefail
+          url="https://github.com/yannh/kubeconform/releases/download/v${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz"
+          curl -sSL --fail --retry 3 --retry-delay 2 -o kc.tar.gz "$url"
           tar xzf kc.tar.gz kubeconform
+          # Prove the binary actually runs before trusting anything it says.
+          ./kubeconform -v
       - name: validate manifests
         # -skip Cluster: kind-config.yaml is a kind CLI config (kind.x-k8s.io),
         # not a Kubernetes API object, so there's no schema to validate it against.
