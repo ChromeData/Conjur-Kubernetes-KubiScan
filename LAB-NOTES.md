@@ -108,3 +108,55 @@ actually wrong with any real manifest.
 
 **Fix:** `-skip Cluster`. Chose that over dropping `-strict`, which would have stopped
 catching unknown fields in the manifests that *do* matter.
+
+### 2026-08-12, first real cluster, and the linter was lying
+
+Built a kind cluster, applied the risky RBAC, exported the live state with
+`kubectl get clusterroles,roles -A -o json` (84 objects) and ran the linter
+against it.
+
+```
+No risky RBAC found.        exit 0
+```
+
+Four deliberately cluster-admin-equivalent ClusterRoles sitting in the cluster,
+created by this repo on purpose, and the tool reported clean.
+
+`kubectl -o json` returns **one** document of kind `List` with everything under
+`items[]`. `analyze_doc` checked the top-level kind, saw `List`, and returned
+`[]`. Every unit test passed the whole time, because all of them fed
+`analyze_text` a hand-written single-document manifest. The linter was only ever
+tested in the shape it does not meet in practice.
+
+**Third time this session.** gitleaks silently detecting nothing after a version
+change in lab 07. checkov silently evaluating nothing on nested ARM in lab 10.
+Now this. Same failure every time: a security tool reporting clean because it
+read nothing, with no signal that anything was wrong. Worth treating as the
+default suspicion rather than a curiosity, and it is why "0 findings" should
+never be accepted without a positive control.
+
+Fixed the traversal, reran, got **62 findings, of which only 11 were the planted
+roles**. The other 47 were roles Kubernetes installs itself. `cluster-admin`
+really can escalate, bind and impersonate; saying so is true and useless, and it
+buries the ones that matter.
+
+Fixed by classifying, not suppressing. Kubernetes stamps its own roles with
+`kubernetes.io/bootstrapping: rbac-defaults`, which beats matching on names.
+Built-ins are still analysed and counted, just not what the exit code turns on.
+
+Final: **15 findings on non-built-in roles**, every planted risk caught.
+
+Four of the fifteen were not planted by this lab at all:
+`local-path-provisioner-role`, which is kind's default storage provisioner,
+ships with escalate, bind and impersonate. A development cluster arrives with
+privileged infrastructure already inside it before anyone writes a Role.
+
+Also made a missing input file an error instead of a clean pass. Four regression
+tests added, 15 pass.
+
+**Not done:** KubiScan itself never ran, so the cross-check between the static
+linter and KubiScan's effective-permission view is still unverified. Conjur was
+not installed, so secret delivery is untested. Full output in
+`findings/live-cluster-run.txt`.
+
+---

@@ -77,3 +77,83 @@ class TestFixtures:
         # demo-workload.yaml defines a ServiceAccount + Deployment, no Roles.
         findings = rbac_lint.analyze_text((K8S / "demo-workload.yaml").read_text())
         assert findings == []
+
+
+# --- regressions from the first real cluster run, 2026-08-12 -----------------
+#
+# Both of these shipped green. The unit tests all passed because every one of
+# them fed analyze_text a hand-written manifest, which is not the shape the
+# tool actually meets in use.
+
+
+def test_kubectl_list_wrapper_is_traversed():
+    """kubectl -o json wraps everything in kind: List.
+
+    The original analyze_doc checked the top-level kind, saw "List", and
+    returned []. Run against a live cluster holding four cluster-admin
+    equivalent roles it printed "No risky RBAC found" and exited 0.
+    """
+    doc = """
+    kind: List
+    apiVersion: v1
+    items:
+      - kind: ClusterRole
+        metadata: {name: sneaky}
+        rules:
+          - apiGroups: ["*"]
+            resources: ["*"]
+            verbs: ["*"]
+    """
+    findings = rbac_lint.analyze_text(doc)
+    assert findings, "List wrapper must be traversed, not skipped"
+    assert any(f["risk"] == "wildcard-all" for f in findings)
+
+
+def test_typed_list_kinds_are_traversed():
+    """kubectl also emits ClusterRoleList / RoleList depending on invocation."""
+    doc = """
+    kind: ClusterRoleList
+    items:
+      - kind: ClusterRole
+        metadata: {name: sneaky}
+        rules:
+          - apiGroups: [""]
+            resources: ["secrets"]
+            verbs: ["get"]
+    """
+    assert any(f["risk"] == "secrets-read" for f in rbac_lint.analyze_text(doc))
+
+
+def test_builtin_roles_are_classified_not_counted():
+    """Kubernetes' own roles carry kubernetes.io/bootstrapping: rbac-defaults.
+
+    cluster-admin really can escalate. Reporting it is true and useless: the
+    live run produced 62 findings, 47 of them on roles Kubernetes installed
+    itself. Flagged, still printed, but not what the exit code is about.
+    """
+    doc = """
+    kind: ClusterRole
+    metadata:
+      name: cluster-admin
+      labels:
+        kubernetes.io/bootstrapping: rbac-defaults
+    rules:
+      - apiGroups: ["*"]
+        resources: ["*"]
+        verbs: ["*"]
+    """
+    findings = rbac_lint.analyze_text(doc)
+    assert findings, "built-ins are still analyzed"
+    assert all(f["builtin"] for f in findings), "and marked as built-in"
+
+
+def test_custom_role_is_not_marked_builtin():
+    doc = """
+    kind: ClusterRole
+    metadata: {name: lab-wildcard}
+    rules:
+      - apiGroups: ["*"]
+        resources: ["*"]
+        verbs: ["*"]
+    """
+    assert all(not f["builtin"] for f in rbac_lint.analyze_text(doc))

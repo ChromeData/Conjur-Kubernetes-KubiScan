@@ -1,0 +1,99 @@
+RBAC audit, real cluster
+Date: 2026-08-12
+Cluster: kind v0.24.0, single node, Kubernetes v1.31
+======================================================================
+
+WHAT RAN
+
+  Created a kind cluster, applied k8s/risky-rbac.yaml and the demo workload,
+  exported live RBAC with
+
+    kubectl get clusterroles,roles -A -o json > rbac.json    (84 objects)
+
+  and pointed scripts/rbac_lint.py at it.
+
+TWO BUGS, BOTH IN THE LAB'S OWN TOOLING, BOTH SHIPPED GREEN
+
+  1. THE LIST WRAPPER, and this one is serious
+
+     First run against the live export:
+
+       No risky RBAC found.        exit 0
+
+     84 RBAC objects in, including four deliberately cluster-admin
+     equivalent ClusterRoles that this repo creates on purpose. Zero
+     findings out, clean exit.
+
+     Cause: kubectl -o json returns ONE document of kind "List" with
+     everything under items[]. analyze_doc checked the top-level kind,
+     saw "List" rather than Role or ClusterRole, and returned [].
+
+     Every unit test passed throughout, because all of them fed
+     analyze_text a hand-written single-document manifest. The tool was
+     only ever tested in the shape it does not meet in practice.
+
+     This is the third time this session the same failure mode has come
+     up: gitleaks silently detecting nothing after a version change in
+     lab 07, checkov silently evaluating nothing on nested ARM in lab 10,
+     and now this. A security tool reporting a clean result because it
+     read nothing is the most dangerous output there is, and none of the
+     three announced themselves.
+
+     Fixed: any kind ending in "List" with an items array is traversed.
+     Typed forms (RoleList, ClusterRoleList) included.
+
+  2. NOISE, 82 PERCENT OF IT
+
+     With the traversal fixed, the same export produced 62 findings.
+     Only 11 were the planted roles. 47 were roles Kubernetes installs
+     itself: cluster-admin, admin, edit, the system: controllers.
+
+     cluster-admin genuinely can escalate, bind and impersonate. Saying
+     so is true and useless, and it buries the findings that matter.
+
+     Fixed by classifying rather than suppressing. Kubernetes stamps its
+     own roles with kubernetes.io/bootstrapping: rbac-defaults, which is
+     a far more robust discriminator than matching on names. Built-ins
+     are still analysed and still counted, they are just not what the
+     exit code is about. --include-builtin prints them.
+
+  Also: a missing input file used to flow through to "No risky RBAC
+  found". It now exits with an error. Same principle, smaller blast
+  radius.
+
+FINAL OUTPUT, LIVE CLUSTER
+
+  15 risky RBAC rule(s) found on non-built-in roles:
+
+    lab-bind             bind
+    lab-escalate         escalate
+    lab-secret-reader    secrets-read
+    lab-wildcard         escalate, bind, impersonate, secrets-read,
+                         pods-create, wildcard-all, token-create
+    lab-pod-creator      pods-create
+    local-path-provisioner-role
+                         escalate, bind, impersonate, pods-create
+
+  (47 findings on Kubernetes built-in roles hidden)
+
+  Every planted risk was detected. The five lab- roles account for 11 of
+  the 15.
+
+  The other 4 are worth a look on their own: local-path-provisioner-role
+  is kind's default storage provisioner, and it ships with escalate,
+  bind and impersonate. Not something this lab planted. A reminder that
+  a development cluster arrives with privileged infrastructure already
+  in it, before anyone writes a single Role.
+
+REGRESSION TESTS
+
+  Four added, covering the List wrapper, typed list kinds, built-in
+  classification, and custom roles not being misclassified. 15 tests
+  pass.
+
+STILL NOT DONE
+
+  KubiScan itself was not run. The cross-check between the static linter
+  and KubiScan's effective-permission view, which is the lab's stated
+  design, remains unverified. Conjur was not installed either, so the
+  secret-delivery half of this lab is untested.
