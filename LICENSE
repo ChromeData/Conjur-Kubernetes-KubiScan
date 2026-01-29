@@ -19,11 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Third-party components retain their own licenses. Not vendored; referenced only:
-
-- cyberark/conjur (LGPL-3.0) — https://github.com/cyberark/conjur
-- cyberark/conjur-oss-helm-chart (Apache-2.0) — https://github.com/cyberark/conjur-oss-helm-chart
-- cyberark/KubiScan (GPL-3.0) — https://github.com/cyberark/KubiScan
