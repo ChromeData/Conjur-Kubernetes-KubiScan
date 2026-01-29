@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="594" height="246" viewBox="0 0 594 246" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13">
+<rect width="594" height="246" rx="8" fill="#0d1117" stroke="#30363d"/>
+<rect width="594" height="34" rx="8" fill="#161b22"/>
+<rect y="26" width="594" height="8" fill="#161b22"/>
+<circle cx="18" cy="17" r="5" fill="#ff5f56"/>
+<circle cx="36" cy="17" r="5" fill="#ffbd2e"/>
+<circle cx="54" cy="17" r="5" fill="#27c93f"/>
+<text x="72" y="22" fill="#8b949e">RBAC linter catches planted roles in both shapes</text>
+<text x="16" y="54" fill="#7ee787">$</text><text x="33" y="54" fill="#c9d1d9">bash scripts/canary.sh</text>
+<text x="16" y="94" fill="#39c5cf" font-weight="600" xml:space="preserve">==&gt; shape 1: the manifest as written</text>
+<text x="16" y="114" fill="#d29922" xml:space="preserve">  risky-rbac.yaml: 11 risky — OK</text>
+<text x="16" y="134" fill="#39c5cf" font-weight="600" xml:space="preserve">==&gt; shape 2: wrapped the way kubectl -o json returns it</text>
+<text x="16" y="154" fill="#c9d1d9" xml:space="preserve">  wrapped 6 objects in a List</text>
+<text x="16" y="174" fill="#d29922" xml:space="preserve">  List-wrapped: 11 risky — OK</text>
+<text x="16" y="214" fill="#3fb950" font-weight="600" xml:space="preserve">CANARY PASSED: the linter rejects the planted roles in both shapes.</text>
+</svg>
