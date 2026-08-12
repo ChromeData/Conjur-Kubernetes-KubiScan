@@ -1,0 +1,37 @@
+# Demo workload that authenticates to Conjur by its service-account identity and
+# pulls a secret at runtime. The point: no secret in this manifest, and the pod's
+# identity is what authorises the retrieval — not a shared token.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: secret-consumer
+  namespace: app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-consumer
+  namespace: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: secret-consumer }
+  template:
+    metadata:
+      labels: { app: secret-consumer }
+    spec:
+      serviceAccountName: secret-consumer
+      # In a full authn-k8s setup this uses the Conjur sidecar/init container to
+      # fetch the secret. Kept as a placeholder image + comment so the manifest is
+      # readable; wire the cyberark secrets-provider init container per authn-k8s.
+      containers:
+        - name: app
+          image: busybox:1.36
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "Secret would be injected to /conjur/secrets by the provider.";
+              echo "This pod holds NO static credential in its spec.";
+              sleep 3600
+      # deliberately NOT mounting a long-lived token secret here
+      automountServiceAccountToken: true
