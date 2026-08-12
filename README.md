@@ -1,5 +1,8 @@
 # Lab 08: Conjur Secrets on Kubernetes plus KubiScan RBAC Audit
 
+<p align="center"><img src="assets/rbac-canary.svg" alt="RBAC linter catches the planted roles in both input shapes" width="720"></p>
+
+
 [![tests](https://github.com/ChromeData/Conjur-Kubernetes-KubiScan/actions/workflows/tests.yml/badge.svg)](https://github.com/ChromeData/Conjur-Kubernetes-KubiScan/actions/workflows/tests.yml)
 
 **Pods get their secrets from Conjur so none holds a static credential. Then a second check hunts the RBAC permissions that make perfect secrets management pointless. Both halves, because doing one without the other is theatre.**
