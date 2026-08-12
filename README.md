@@ -9,7 +9,7 @@
 | **Domains** | CyberArk/Idira, Linux, Kubernetes |
 | **Built on** | [cyberark/conjur](https://github.com/cyberark/conjur) + [helm chart](https://github.com/cyberark/conjur-oss-helm-chart), [cyberark/KubiScan](https://github.com/cyberark/KubiScan) |
 | **Cost** | $0 (local kind/minikube). **Runtime** ~4 hours |
-| **Status** | Built, tests pass, not yet run on a cluster |
+| **Status** | Built and verified. Linter catches all 6 planted risks (11 passing, output in findings/). Cluster run pending |
 
 ## Situation
 
