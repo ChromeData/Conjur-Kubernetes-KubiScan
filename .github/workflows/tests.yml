@@ -28,4 +28,6 @@ jobs:
           curl -sSLo kc.tar.gz https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz
           tar xzf kc.tar.gz kubeconform
       - name: validate manifests
-        run: ./kubeconform -strict -summary k8s/
+        # -skip Cluster: kind-config.yaml is a kind CLI config (kind.x-k8s.io),
+        # not a Kubernetes API object, so there's no schema to validate it against.
+        run: ./kubeconform -strict -summary -skip Cluster k8s/
