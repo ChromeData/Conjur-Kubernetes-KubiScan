@@ -160,3 +160,32 @@ not installed, so secret delivery is untested. Full output in
 `findings/live-cluster-run.txt`.
 
 ---
+
+### 2026-08-12, a canary, because the unit tests could not have caught this
+
+The List bug passed every unit test, because every unit test feeds
+`analyze_text` a hand-written single-document manifest. The linter was only ever
+exercised in a shape it does not meet in practice.
+
+Regression tests fix that specific bug. They do not fix the underlying problem,
+which is that the suite proves the linter works on inputs I chose rather than on
+inputs it will actually see.
+
+`scripts/canary.sh` runs the linter against this repo's **own** deliberately
+dangerous manifest, in both shapes, and fails if either comes back clean:
+
+```
+shape 1  risky-rbac.yaml   11 risky   OK
+shape 2  List-wrapped      11 risky   OK
+```
+
+One detail worth keeping. The first version checked `exit != 0`, and it "passed"
+against a file that did not exist, because a missing-file error is also non-zero.
+It now distinguishes exit 1 (findings) from anything else (could not run), and
+reports the latter as a failure rather than a detection. I wrote the same bug
+into the check for the bug. That is how easy this is to get wrong.
+
+Verified in a Linux container both ways: healthy passes, and with List traversal
+disabled it fails with "FOUND NOTHING in a file full of planted escalation".
+
+---
