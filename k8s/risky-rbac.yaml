@@ -7,7 +7,7 @@
 # Each entry embeds one escalation primitive. KubiScan should flag them; so
 # should scripts/rbac_lint.py. The two agreeing is the lab's cross-check.
 ---
-# Risk 1: `escalate` — grant yourself any permission, bypassing the normal
+# Risk 1: `escalate`, grant yourself any permission, bypassing the normal
 # guard that you can't create a role more powerful than your own.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -18,7 +18,7 @@ rules:
     resources: ["clusterroles"]
     verbs: ["escalate", "create"]
 ---
-# Risk 2: `bind` — bind any existing role to yourself, including cluster-admin.
+# Risk 2: `bind`, bind any existing role to yourself, including cluster-admin.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -39,7 +39,7 @@ rules:
     resources: ["secrets"]
     verbs: ["get", "list", "watch"]
 ---
-# Risk 4: create pods — schedule a pod mounting a privileged service account,
+# Risk 4: create pods, schedule a pod mounting a privileged service account,
 # then use its token. The classic "I only have pod-create" escalation.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -61,7 +61,7 @@ rules:
     resources: ["*"]
     verbs: ["*"]
 ---
-# Risk 6: the binding that makes Risk 5 live — a service account wearing a
+# Risk 6: the binding that makes Risk 5 live, a service account wearing a
 # cluster-admin-equivalent role.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

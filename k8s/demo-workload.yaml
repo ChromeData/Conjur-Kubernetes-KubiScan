@@ -1,6 +1,6 @@
 # Demo workload that authenticates to Conjur by its service-account identity and
 # pulls a secret at runtime. The point: no secret in this manifest, and the pod's
-# identity is what authorises the retrieval — not a shared token.
+# identity is what authorises the retrieval, not a shared token.
 apiVersion: v1
 kind: ServiceAccount
 metadata:

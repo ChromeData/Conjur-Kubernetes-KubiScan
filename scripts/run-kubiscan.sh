@@ -11,7 +11,7 @@ if [[ ! -d "${LAB_ROOT}/vendor/KubiScan" ]]; then
   git clone --depth 1 https://github.com/cyberark/KubiScan "${LAB_ROOT}/vendor/KubiScan"
 fi
 
-# KubiScan reads the current kubecontext. Confirm it's the lab cluster first — you
+# KubiScan reads the current kubecontext. Confirm it's the lab cluster first, you
 # do NOT want to point this at a real cluster by accident (read-only, but still).
 CTX="$(kubectl config current-context)"
 echo "==> kubecontext: ${CTX}"
