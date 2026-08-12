@@ -61,7 +61,7 @@ Needs kind or minikube, kubectl, Helm, Python 3.
 
 ## Findings
 
-`findings/` fills in from the KubiScan run. [LAB-NOTES.md](./LAB-NOTES.md) is the log.
+[`findings/`](./findings/) holds the live-cluster run: the linter silently missing every planted role on `kubectl` output, then catching all 15 after the fix. [LAB-NOTES.md](./LAB-NOTES.md) is the log.
 
 ## License
 
