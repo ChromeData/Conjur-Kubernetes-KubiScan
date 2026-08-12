@@ -39,7 +39,9 @@ To have something to catch, [k8s/risky-rbac.yaml](./k8s/risky-rbac.yaml) plants 
 
 ## Result
 
-The linter catches all six. 11 offline tests prove it, including that the clean workload trips none and that harmless rules (list configmaps, get pods) are not false flagged. CI also schema checks every manifest with kubeconform. The two checks agreeing is the cross check: static analysis on the YAML, plus the live scan.
+**Run against a real kind cluster, the linter catches every planted role** — after a run that first proved why it's needed. Pointed at live `kubectl -o json` output, the first version reported `No risky RBAC found` on a cluster holding four cluster-admin-equivalent roles: `kubectl` wraps everything in a single `kind: List` document the linter did not descend into. Every unit test had passed the whole time, because every test fed it a hand-written manifest — the one shape it never meets in production. Fixed, and it now surfaces 15 findings, separating the planted roles from Kubernetes' own built-ins by label rather than by name.
+
+15 tests plus a CI *canary* that runs the linter against this repo's own dangerous manifest in both input shapes and fails if either comes back clean — so a linter that silently stops detecting can never ship green again. kubeconform schema-checks every manifest alongside it. Full output in [findings/live-cluster-run.txt](./findings/live-cluster-run.txt).
 
 ## What I did not build
 
